@@ -33,7 +33,6 @@ from string import punctuation
 from html import escape
 sys.path.insert(1, os.path.dirname(os.path.realpath(__file__)) + '/langdetect')
 from langdetect import detect as detect_language
-#from langid import classify
 
 script_started = time.time()
 
@@ -54,7 +53,7 @@ code_file_name = ''
 waiting_code_file_name = ''
 tl_code = ''
 password_2FA = ''
-command_to_perfdorm = 'do_job'  # 'connect_to_debug'
+command_to_perfdorm = 'do_job'
 exit_error = '0000'
 exit_message = 'ok'
 passed_data = ''
@@ -115,24 +114,12 @@ def save_log(log_message='', log_file_path=''):
         append_write = 'w'  # make a new file if not
     f = open(log_file_path, append_write, encoding="utf8")
 
-    # try:
-    # global phone
-    # phone = phone + ''
-    # except BaseException as e:
-    # phone = ""
-    # pass
     f.write(now.strftime("%d/%m/%Y %H:%M") + " " + str(phone) + " " + log_message + "\r\n")
     f.close()
 
 
 def save_exception(ex_message):
     return False
-    '''
-    f = open(last_log_message_file_path, "w")
-    f.write(ex_message)
-    f.close()
-    '''
-
 
 async def find_chats():
     res = await client(GetDialogsRequest(
@@ -176,7 +163,7 @@ async def find_user_name(user_id):
                 message_user_name = full.users[0].username
                 debug_find = "3"
                 cur_username = cur_username + '<a href="https://t.me/' + full.users[0].username + '">@' + full.users[
-                    0].username + '</a>|'  # + 'userid:'# + str(user_id)
+                    0].username + '</a>|'
             if full.full_user and hasattr(full.full_user, "about") and not full.full_user.about is None:
                 debug_find = "4"
                 cur_username = cur_username + ' ' + full.full_user.about
@@ -209,8 +196,6 @@ async def find_messages(group=None):
             min_id=0,
             hash=0
         ))
-        # print('group: ', offset_id, max_messages_in_return, '<br>')
-
 
 async def send_mess(recipient, message):
     await client.send_message(entity=recipient, message=message, parse_mode='HTML')
@@ -405,11 +390,7 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                 if "keywords" in data_arr:
                     for i in range(len(data_arr['keywords'])):
                         try:
-                            # if write_messages_on_screen:
-                            #    print("keyword orig: ", data_arr['keywords'][i], "<br>")
-                            #save_log(f"keyword: {data_arr['keywords'][i]}")
                             decoded_wrd = str(bytes.fromhex(data_arr['keywords'][i]).decode('utf-8'))
-                            #save_log(f"decoded keyword: {decoded_wrd}")
                             
                             keywords_arr.append({"keyword": decoded_wrd, "orig": data_arr['keywords'][i]})
 
@@ -444,13 +425,10 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                         try:
                             decoded_wrd = str(bytes.fromhex(data_arr['stopwords'][i]).decode('utf-8'))
                             stopwords_arr.append(decoded_wrd)
-                            # if write_messages_on_screen:
-                            #    print("stop word: ", str(decoded_wrd), "<br>")
-                            # stopwords_arr.append(base64.b64decode(data_arr['stopwords'][i]).decode('utf-8'))
+                            
                         except Exception as err:
                             if write_messages_on_screen:
                                 print("exception stop word: ", data_arr['stopwords'][i], "<br>")
-                            # save_log(f"eception in processing data stopword {err=}, {type(err)=}")
                             exit_error = WARNING_WRONG_STOPWORD
                             exit_message = data_arr['stopwords'][i]
                             pass
@@ -470,31 +448,27 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                 pass
 
         if len(keywords_arr) == 0 and len(debug_keyword) > 0:
-            # keywords_arr.append({"keyword":debug_keyword, "orig":base64.b64encode(debug_keyword.encode('utf-8')).decode('utf-8')})
             keywords_arr.append({"keyword": debug_keyword, "orig": debug_keyword.encode('utf-8').hex()})
 
         if len(stopwords_arr) == 0 and len(debug_stopword) > 0:
             stopwords_arr.append(debug_stopword)
 
         # Connect to the Telegram
-        #save_log(f"connecting: '{phone}', {api_id}, {api_hash}")
+        
         client = TelegramClient(phone, api_id, api_hash)
         debug_step = "0.1"
         client.connect()
         debug_step = "0.2"
-        #save_log(f"sign_in 2FA password: {password_2FA}")
         if not client.is_user_authorized():
             debug_step = "0.3"
             if command_to_perfdorm == 'do_job':
                 exit_error = ERROR_NOT_AUTHORIZED
-                # save_log(f"{phone=} not started")
                 sys.exit()
             debug_step = "0.4"
             if len(code_file_name) == 0:
                 exit_error = ERROR_NO_CODE_FILE_NAME
                 sys.exit()
             debug_step = "0.5"
-            #save_log(f"send_code_request")
             client.send_code_request(phone)
             save_log(f"read_code_from_file, password: {password_2FA}")
             tl_code = read_code_from_file(code_file_name)
@@ -504,7 +478,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
             except SessionPasswordNeededError:
                 client.sign_in(password=password_2FA)
 
-            #save_log(f"signed")
         client.start()
 
         if not command_to_perfdorm == 'do_job':
@@ -635,8 +608,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                         try:
                             if (time.time() + time.timezone) - time.mktime(
                                     message.date.timetuple()) > parse_messages_for_last_hours * 60 * 60:
-                                # if write_messages_on_screen:
-                                #    print("message sent hours ago:", ((time.time() + time.timezone) - time.mktime(message.date.timetuple())) / 60 / 60, "<br>", message.message, "<br>")
                                 break
 
                             msg_user_id = message.sender_id  # message.from_id.user_id
@@ -647,11 +618,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                                 save_log(f"Message {str(message.id)} already processed")
                                 continue
 
-                            #if write_messages_on_screen:
-                            #    print(f"{message.date} {message.message}<br>")
-                            
-                            #save_log(f"{message.message}")
-
                             # look for any of stopword in message
                             stopword_found = False
                             for stopword in stopwords_arr:
@@ -660,14 +626,10 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                                     x = re.search(srch, message.message, flags=re.I + re.M)
                                     if x:
                                         stopword_found = True
-                                        #if write_messages_on_screen:
-                                        #    print(f"Found stopword {stopword}<br>")
                                         break
                                 else:
                                     if message.message.lower().find(stopword.lower()) >= 0:
                                         stopword_found = True
-                                        # if write_messages_on_screen:
-                                        #    print(f"Found stopword {stopword}<br>")
                                         break
                             if stopword_found:
                                 continue
@@ -681,7 +643,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                             
                             for keyword_dic in keywords_arr:
                                 keyword = keyword_dic["keyword"]
-                                #save_log(f"Searching for keyword: {keyword}")
                                 
                                 if write_messages_on_screen:
                                    print(f"Searching for keyword: {keyword}<br>")
@@ -714,7 +675,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                                    
                                 if keyword.find("/") == 0:
                                     srch = keyword.removeprefix("/")
-                                    #save_log(f"Searching for keyword: {srch} in: {message.message}")
                                     x = re.search(srch, message.message, flags=re.I)
                                     if x:
                                         keyword_found = True
@@ -749,7 +709,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                                         if str(sent_message_id['message_id']) == str(message.id):
                                             if not debug_mode:
                                                 message_already_processed = True
-                                            # save_log(f"mesage {sent_message_id['message_id']} already processed")
                                             if write_messages_on_screen:
                                                 print(f"mesage {sent_message_id['message_id']} already processed<br>")
                                             break
@@ -786,7 +745,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                                         if write_messages_on_screen:
                                             print(
                                                 f"Discarded! Message has no user name: {message.date} {message.message}<br>")
-                                        # save_log(f"Message has no user name")
                                         continue
 
                                     debug_step = "4.8"
@@ -814,18 +772,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                                         if not message_user_name is None and len(message_user_name) > 0:
                                             message_text = message_text + '&#128100; @' + message_user_name + '\n'
                                         message_text = message_text + '&#128273;' + keyword_which_found
-                                        # message_text = message_text + '<b><a href="https://t.me/' + target_group_username + "/" + str(message.id) + '/">&#128273;' + keyword_which_found + '</a></b>\n'
-
-                                        '''
-                                        message_text = '&#128101; <a href="https://t.me/' + target_group_username + '/">' + target_group_username + ' </a>\n' + '<a href="https://t.me/' + target_group_username + '/' + str(message.id) + '/">&#128172; message  </a>\n'
-                                        if not message_user_name is None and len(message_user_name) > 0:
-                                            message_text = message_text + '&#128100; @' + message_user_name + '\n'
-                                        message_text = message_text + '&#128273;' + keyword_which_found + '\n' + message.message
-                                        '''
-                                        # message_text = cur_username + "\n" + '<b><a href="https://t.me/' + target_group_username + "/" + str(message.id) + '/">&#128273;' + keyword_which_found + '</a></b>\n' + message.message
-
-                                        # message_text = '<a href="https://t.me/' + target_group_username + "/" + str(message.id) + '/">' + cur_username + "</a>\n" + '&#128273;<b>' + keyword_which_found + '</b>\n' + message.message
-                                        # save_log(message_text)
                                         if write_messages_on_screen:
                                             print(f"sending message: {message_text}")
                                     except Exception as err:
@@ -835,12 +781,9 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                                     admin_group_found = False
                                     # forward this message to the admin groups
                                     for group_of_admins in groups_to_monitor:
-                                        #save_log('group: ' + str(group_of_admins['group_id']) + ', status: ' + str(group_of_admins['group_status']))
                                         if group_of_admins['group_status'] == 'a':
                                             admin_group_found = True
-                                            #save_log('admin group found: ' + str(group_of_admins['group_id']))
                                             for group_object in groups:
-                                                #save_log('group: ' + str(group_object.id))
                                                 if group_of_admins['group_id'] == str(group_object.id):
                                                     try:
                                                         debug_step = "5.1"
@@ -863,16 +806,9 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
                                     found_messages_arr.append({'message_id': message.id,
                                                                'unix_time': str(round(time.time() + time.timezone))})
                                     m = message.message[0:256]
-                                    # b = m.encode(encoding="ascii", errors="xmlcharrefreplace")
-                                    # m = b.decode("utf-8")
-
+                                    
                                     keyword_which_found_entity = keyword_which_found
-                                    # try:
-                                    #    b = keyword_which_found.encode(encoding="ascii", errors="xmlcharrefreplace")
-                                    #    keyword_which_found_entity = b.decode("utf-8")
-                                    # except Exception as err:
-                                    #    pass
-
+                                    
                                     m = '&#128273; ' + str(keyword_which_found_entity) + ' &#10140; ' + str(
                                         m) + ' &#8592; @' + str(target_group_username)
                                     all_messages.append(str(m))
@@ -886,7 +822,6 @@ if command_to_perfdorm == 'do_job' or command_to_perfdorm == 'send_code_request'
 
                             debug_step = "6"
                             if ((maximum_messages != 0 and len(all_messages) >= maximum_messages)):
-                                '''or (not message_user_name is None and len(message_user_name) > 0)'''
                                 break
                         except Exception as err:
                             if write_messages_on_screen:
@@ -989,10 +924,6 @@ elif command_to_perfdorm == 'send_message':
 
         send_message_text = bytes.fromhex(send_message_text).decode('utf-8')
 
-        # with client:
-        #    client.loop.run_until_complete(
-        #        send_mess(send_message_recipient, send_message_text))
-
         print(generate_answer(1, 'message to @' + send_message_recipient + ' has been sent '))
         save_log('message to:' + send_message_recipient + ', ' + send_message_text)
 
@@ -1068,7 +999,6 @@ elif command_to_perfdorm == 'get_group_info':
                 debug_step = "2"
                 all_messages_from_group = ''
 
-                # if (time.time() + time.timezone) - time.mktime(message.date.timetuple()) > parse_messages_for_last_hours * 60 * 60:
                 unixtime_of_nevest_message = 0
                 unixtime_of_first_message = 0
                 number_of_not_null_messages = 0
@@ -1089,8 +1019,6 @@ elif command_to_perfdorm == 'get_group_info':
                 language = ''
                 try:
                     language = detect_language(all_messages_from_group)
-                    #detect_language = classify(all_messages_from_group)
-                    #language = detect_language[0]
                 except:
                     pass
                 
@@ -1107,14 +1035,11 @@ elif command_to_perfdorm == 'get_group_info':
                 try:
                     debug_step = "2.3"
                     spec_chars = string.punctuation + '\n\xa0«»\t—…'
-                    # all_messages_from_group = "".join([ch for ch in all_messages_from_group if ch not in spec_chars])
-
+                    
                     all_messages_from_group = re.sub('[' + spec_chars + ']', ' ', all_messages_from_group)
                     all_messages_from_group = re.sub('[^\x00-\x7Fа-яА-Я]', ' ', all_messages_from_group)
                     all_messages_from_group = re.sub('[0-9]+', ' ', all_messages_from_group)
-
-                    # if write_messages_on_screen:
-                    #    print('downloaded : ', len(all_messages_from_group), 'chars<br>')
+                    
                     group_tokens = word_tokenize(all_messages_from_group)
 
                     russian_stopwords = stopwords.words("russian")
@@ -1181,8 +1106,6 @@ elif command_to_perfdorm == 'get_group_info':
                                       "minutes_interval_between_messages": time_interval_between_messages,
                                       "unixtime_of_nevest_message": unixtime_of_nevest_message,
                                       "group_symantic_core": group_symantic_core, "language":str(language)}))
-        #save_log('group: ' + group_username + ' has been parsed ')
-
     except BaseException as e:
         print(generate_answer(0, 'exception in get_group_info: ' + str(e), '', exit_error))
         save_log('Exception in get_group_info: ' + str(e) + " debug_step: " + debug_step)

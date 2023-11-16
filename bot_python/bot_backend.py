@@ -2,7 +2,6 @@ from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.types import InputPeerEmpty
 from telethon.tl.functions.messages import GetHistoryRequest
-# from telethon.tl.types import PeerChannel
 from telethon import TelegramClient
 from telethon.tl.functions.users import GetFullUserRequest
 import csv
@@ -13,7 +12,6 @@ from datetime import datetime
 import time
 import os
 
-# name: consalappbot4
 api_id = '';
 api_hash = '';
 phone = '';
@@ -137,9 +135,6 @@ try:
 except Exception:
     pass
 
-#save_log("Cannot read messages from group ", 'O')
-#exit()
-
 # Connect to the Telegram
 client = TelegramClient(phone, api_id, api_hash)
 
@@ -184,7 +179,6 @@ try:
             keywords_arr = json.loads(keywords_json)
             for i in range(len(keywords_arr)):
                 keywords_arr[i] = base64.b64decode(keywords_arr[i]).decode('utf-8')
-                #print('keyword: ' + keywords_arr[i])
         else:
             print(f'\033[93m' + "Error: no keywords specified. Add some keywords" + '\033[0m')
 except Exception as err:
@@ -345,7 +339,6 @@ try:
                     except Exception as err:
                         print('\033[91m' + f"Unexpected {err=}, {type(err)=}, {debug_step=}"+ '\033[0m')
                         print('\033[91m' + f"mes: {message.message=}, {keyword=}"+ '\033[0m')
-                        # save_exception(f"eception in processing message {err=}, {type(err)=}")
 
                 offset_id = messages[len(messages) - 1].id
                 if maximum_messages != 0 and len(all_messages) >= maximum_messages:
@@ -373,4 +366,3 @@ try:
 except Exception as err:
     print(f"Global exception: {err=}, {type(err)=} {debug_step=}")
     save_exception(f"Global exception: {err=}, {type(err)=}, {debug_step=}")
-

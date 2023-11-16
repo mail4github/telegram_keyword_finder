@@ -88,23 +88,10 @@ async def send_mess(group, message):
 
 def save_log(log_message='', log_color=''):
     return False
-    '''
-    log_message_e = base64.b64encode(log_message.encode('utf-8')).decode("utf-8")
-    asss = '{"message" : "' + log_message_e + '", "color" : "' + log_color + '", "unixtime" : "' + str(
-        round(time.time())) + '"}'
-    asss = base64.b64encode(asss.encode('utf-8')).decode("utf-8")
-    result = requests.get(api_url, params={'command': 'add_log', 'log': asss})
-    print(f'\033[93m sent alert: {result.text} \033[0m')
-    '''
-
+    
 def save_exception(ex_message):
     return False
-    '''
-    f = open(last_log_message_file_path, "w")
-    f.write(ex_message)
-    f.close()
-    '''
-
+    
 customers_file_path = os.path.dirname(os.path.realpath(__file__)) + '/customers.json'
 print(customers_file_path)
 
@@ -114,7 +101,6 @@ f.close()
 print(f"{customers=}")
 if customers and len(customers) > 0:
     customers_arr = json.loads(customers)
-    #print(customers_arr[0]['phone'])
     api_id = customers_arr[0]['api_id']
     api_hash = customers_arr[0]['api_hash']
     phone = customers_arr[0]['phone']
@@ -125,13 +111,6 @@ if customers and len(customers) > 0:
     
     # Connect to the Telegram
     client = TelegramClient(phone, api_id, api_hash)
-    '''
-    client.connect()
-    if not client.is_user_authorized():
-        print(f"\033[91m user {phone=} not authorized \033[0m")
-        save_exception(f"user not authorized")
-        sys.exit()
-    '''
     client.start()
     # Search for chats
     with client:
@@ -157,5 +136,3 @@ if customers and len(customers) > 0:
 
     groups_json = '[' + groups_json + ']'
     groups_json = base64.b64encode(groups_json.encode('utf-8')).decode("utf-8")
-
-    #requests.post(api_url, data={'groups_json': groups_json})
