@@ -92,7 +92,6 @@ def save_log(log_message='', log_color=''):
     asss = '{"message" : "' + log_message_e + '", "color" : "' + log_color + '", "unixtime" : "' + str(
         round(time.time())) + '"}'
     asss = base64.b64encode(asss.encode('utf-8')).decode("utf-8")
-    #print(f'{api_url}?command=add_log&log={asss}')
     result = requests.get(api_url, params={'command': 'add_log', 'log': asss})
     print(f'\033[93m sent alert: {result.text} \033[0m')
 
@@ -172,6 +171,7 @@ requests.post(api_url, data={'groups_json': groups_json})
 keywords_arr = []
 result = requests.get(api_url, params={'command': 'get_keywords'})
 try:
+    #print('received from API: ', result.text)
     res_json = json.loads(result.text)
     if res_json['success']:
         keywords_json = res_json['values']
@@ -186,10 +186,12 @@ except Exception as err:
     save_exception(f"Exception reading keywords {err=}, {type(err)=}")
     exit()
 
+
 # Retrieve the list of stop words from the admin web server
 stopwords_arr = []
 result = requests.get(api_url, params={'command': 'get_stopwords'})
 try:
+    #print('received stopwords from API: ', result.text)
     res_json = json.loads(result.text)
     if res_json['success']:
         keywords_json = res_json['values']
@@ -212,6 +214,8 @@ try:
 except Exception:
     pass
 
+#print('sent_messages_txt: ', sent_messages_txt)
+
 if sent_messages_txt and len(sent_messages_txt) > 0:
     sent_messages_arr = json.loads(sent_messages_txt)
 
@@ -220,6 +224,7 @@ result = requests.get(api_url, params={'command': 'get_groups_to_listen'})
 
 debug_step = "0"
 try:
+    #print('API get_groups_to_listen: ', result.text)
     res_json = json.loads(result.text)
     if res_json['success']:
         groups_to_monitor = res_json['values']
@@ -320,7 +325,7 @@ try:
 
                                     if len(cur_username) <= 0:
                                         cur_username = target_group.username
-                                    message_text = '<a href="https://t.me/' + target_group.username + "/" + str(message.id) + '/">' + cur_username + "</a>\n" + '&#128273;<b>' + keyword_which_found + '</b>\n' + message.message
+                                    message_text = '<a href="https://t.me/' + str(target_group.username) + "/" + str(message.id) + '/">' + str(cur_username) + "</a>\n" + '&#128273;<b>' + str(keyword_which_found) + '</b>\n' + str(message.message)
 
                                     # forward this message to the admin groups
                                     for group_of_admins in groups_to_monitor:
@@ -329,9 +334,8 @@ try:
                                                 if group_of_admins['group_id'] == str(group_object.id):
                                                     debug_step = "6"
                                                     with client:
-                                                        client.loop.run_until_complete(
-                                                            send_mess(group=group_object, message=message_text))
-                                                    print('\033[92m' + 'Sent message id: ' + str(message.id) + ' to group: ' + group_object.title + '\033[0m')
+                                                        client.loop.run_until_complete(send_mess(group=group_object, message=message_text))
+                                                    print('\033[92m' + 'Sent message id: ' + str(message.id) + ' to group: ' + str(group_object.title) + '\033[0m')
                                                     break
 
                         if maximum_messages != 0 and len(all_messages) >= maximum_messages:

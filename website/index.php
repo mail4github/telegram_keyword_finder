@@ -1,4 +1,10 @@
 <?php
+/**
+ * Telegram groups parser  -  A web interface to the Python parser
+ *
+ * @package   index.php
+ * @author    Pavel Zh <lancerpavel@mail.ru>
+*/
 
 $groups_file_path = 'groups.txt';
 $keywords_file_path = 'keywords.txt';
@@ -8,10 +14,22 @@ $log_file_path = 'log.txt';
 $maximum_records_to_store = 500;
 $credentials_file_path = '../bot_python/credentials.txt';
 
+/**
+ * Generate JSON answer
+ * @param  int $success, string $message, string $values, string $error_code
+ * @return string
+*/
+
 function generate_answer($success = 1, $message = '', $values = '', $error_code = '')
 {
 	return '{"success":'.$success.', "message":"'.$message.'", "error_code":"'.$error_code.'", "values":'.json_encode($values).'}';
 }
+
+/**
+ * Save event in the log file
+ * @param  array $log_info_arr
+ * @return int
+*/
 
 function add_to_log($log_info_arr)
 {
@@ -35,6 +53,12 @@ function add_to_log($log_info_arr)
 	return 0;
 }
 
+/**
+ * A function which is used in the sorting
+ * @param  array $a, $b
+ * @return int
+*/
+
 function sort_cmp($a, $b) 
 {
 	if( $a['group_name'] == $b['group_name'] ) {
@@ -42,6 +66,10 @@ function sort_cmp($a, $b)
 	}
 	return ($a['group_name'] < $b['group_name']) ? -1 : 1;
 }
+
+/**
+ * Saving array of groups in the $groups_file_path file by a POST request
+*/
 
 if (!empty($_POST['groups_json'])) {
 	$received_groups_arr = json_decode(base64_decode($_POST['groups_json']), true);
@@ -57,9 +85,12 @@ if (!empty($_POST['groups_json'])) {
 		}
 	}
 	file_put_contents($groups_file_path, json_encode($received_groups_arr));
-	
 	exit;
 }
+
+/**
+ * Parse GET requests which have sent in the 'command' parameter
+*/
 
 if (!empty($_GET['command'])) {
 	switch ($_GET['command']) {
@@ -147,11 +178,19 @@ if (!empty($_GET['command'])) {
 	exit;
 }
 
+/**
+ * Perform logout
+*/
+
 if ($_GET['page'] == 'logout') {
 	setcookie('loggedin', '0');
 	header('Location: ?page=set');
 	exit;
 }
+
+/**
+ * Perform login by login name and password
+*/
 
 if ($_POST['login_submitted'] == '1') {
 	$credentials_arr = json_decode(file_get_contents($credentials_file_path), true);
@@ -159,23 +198,22 @@ if ($_POST['login_submitted'] == '1') {
 		setcookie('loggedin', '1');
 		header('Location: ?page=work');
 		exit;
-		//$_COOKIE['loggedin'] == '1';
-		//$_GET['page'] = 'work';
 	}
 	else {
 		$_COOKIE['loggedin'] == '0';
 	}
 }
 
+/**
+ * Redirect to the specified webpage
+*/
 if ($_COOKIE['loggedin'] == '1') {
 	if ( empty($_GET['page']) )
 		$_GET['page'] = 'work';
-
 }
 else {
 	$_GET['page'] = '';
 }
-
 
 ?>
 <!DOCTYPE html>
@@ -206,7 +244,6 @@ else {
 		.log_td_time{min-width: 15em; font-size: 60%;}
 	</style>
 	<script src="/javascript/pycommon.js" type="text/javascript"></script>
-	<!--script src="/javascript/scriptaculous/lib/prototype.js" type="text/javascript"></script-->
 	<script src="/javascript/jquery.min.js"></script>
 	<script src="/javascript/jquery-ui.min.js"></script>
 	<script type="text/javascript">
@@ -601,7 +638,6 @@ else {
 		setInterval(refersh_groups, 5000);
 		setInterval(read_messages, 2000);
 		setInterval(get_log, 5000);
-
 	});
 	</script>
 	</body>
